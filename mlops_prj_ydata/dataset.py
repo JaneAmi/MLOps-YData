@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
 
 class CreditDataPreprocessor:
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, save=True):
         self.names = ['existingchecking', 'duration', 'credithistory', 'purpose', 'creditamount', 
                       'savings', 'employmentsince', 'installmentrate', 'statussex', 'otherdebtors', 
                       'residencesince', 'property', 'age', 'otherinstallmentplans', 'housing', 
@@ -54,6 +54,7 @@ class CreditDataPreprocessor:
         self.X_clean = None
         self.y_clean = None
         self.verbose = verbose
+        self.save = save
 
     def fetch_data(self):
         """ Fetch dataset from UCI repository """
@@ -96,9 +97,76 @@ class CreditDataPreprocessor:
         """ Main method to prepare data """
         X, y = self.fetch_data()
         self.X_clean, self.y_clean = self.preprocess_data(X, y)
+
+        if self.save:
+            df = pd.concat([self.X_clean, self.y_clean], axis=1)
+            df.to_csv("../data/processed/german_credit_score.csv", index=False)
+
         return self.X_clean, self.y_clean
 
-def german_credit_data():
-    preprocessor = CreditDataPreprocessor()
-    return preprocessor.prepare_data()
+def german_credit_data(save=True):
+    try:
+        df = pd.read_csv("../data/processed/german_credit_score.csv")
+        return df.iloc[:, :-1], df.iloc[:, -1:]
+    except:
+        preprocessor = CreditDataPreprocessor(save=save)
+        return preprocessor.prepare_data()
+
+
+
+
+import pandas as pd
+
+class BankDataProcessor:
+    def __init__(self, filepath="../data/raw/bank.csv", save=True):
+        """
+        Initialize the BankDataProcessor with the path to the CSV file.
+        """
+        self.filepath = filepath
+        self.data = None
+        self.data_X = None
+        self.data_y = None
+        self.save = save
+
+    def load_data(self):
+        """
+        Load data from a CSV file.
+        """
+        self.data = pd.read_csv(self.filepath, delimiter=";", header='infer')
+        return self.data.head()
+
+    def preprocess_data(self):
+        """
+        Preprocess the data by converting categorical columns to dummy variables
+        and encoding the target variable.
+        """
+        columns_to_dummy = ['job', 'marital', 'education', 'default', 'housing', 
+                            'loan', 'contact', 'month', 'poutcome']
+        self.data = pd.get_dummies(self.data, columns=columns_to_dummy)
+        self.data['y'].replace(('yes', 'no'), (1, 0), inplace=True)
+
+        if self.save:
+            self.data.to_csv("../data/processed/bank_marketing.csv", index=False)
+
+
+    def get_features_and_target(self):
+        """
+        Public method to get the preprocessed features and target.
+        Split the data into features (X) and target (y).
+        """
+        self.load_data()
+        self.preprocess_data()
+        self.data_y = pd.DataFrame(self.data['y'])
+        self.data_X = self.data.drop(['y'], axis=1)
+
+        return self.data_X, self.data_y
+
+
+def bank_marketing(save=True):
+    try:
+        df = pd.read_csv("../data/processed/bank_marketing.csv.csv")
+        return df.iloc[:, :-1], df.iloc[:, -1:]
+    except:
+        processor = BankDataProcessor(save=save)
+        return processor.get_features_and_target()
 
