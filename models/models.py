@@ -91,4 +91,9 @@ class XGBClassifierWrapper:
         Return the internal XGBoost model.
         """
         return self.model
+    
+    def get_params(self):
+
+        return self.model.get_params()
+
 
