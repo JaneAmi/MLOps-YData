@@ -3,18 +3,84 @@
 
 import xgboost as xgb
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
-from sklearn.metrics import classification_report,confusion_matrix, roc_curve, roc_auc_score, auc, accuracy_score
+from sklearn.metrics import classification_report,confusion_matrix, roc_curve, roc_auc_score, auc, accuracy_score, f1_score
 
 import matplotlib.pyplot as plt 
 
 
-import xgboost as xgb
+from xgboost import XGBClassifier
 
 
 
 import xgboost as xgb
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_curve, auc
 import matplotlib.pyplot as plt
+
+class XGBClassifierWrapperSimple(xgb.XGBClassifier):
+    def __init__(self, verbose=False, **kwargs):
+        """
+        Initialize the XGBClassifierWrapper with model parameters.
+        """
+
+        super().__init__()
+        self.verbose = verbose
+
+    def fit(self, X_train, y_train):
+        """
+        Fit the XGBoost model with the given training and test data.
+        """
+        super().fit(X_train, y_train)
+
+    def predict(self, X_test):
+        """
+        Make predictions using the trained XGBoost model.
+        """
+        return super().predict(X_test)
+
+    def evaluate(self, X_test, y_test):
+        """
+        Evaluate the model on the test data and print various metrics.
+        """
+        y_pred = self.predict(X_test)
+        print(f'Accuracy: {accuracy_score(y_test, y_pred) :,.2f}')
+        print(f'ROC AUC: {roc_auc_score(y_test, y_pred) :,.2f}')
+        print(f'F1: {f1_score(y_test, y_pred) :,.2f}')
+
+    def get_roc (self, y_test, y_pred_proba):
+        # Compute ROC curve and ROC area for each class
+        fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+        # roc_auc = auc(fpr, tpr)
+
+        roc_auc = roc_auc_score(y_test, y_pred_proba)
+        # Plot of a ROC curve
+        plt.figure()
+        lw = 2
+        plt.plot(fpr, tpr, color='darkorange',
+                 label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.0])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic')
+        plt.legend(loc="lower right")
+        plt.show()
+
+    def get_model(self):
+        """
+        Return the internal XGBoost model.
+        """
+        return self
+    
+    def get_params(self, deep=True):
+        return super().get_params(deep)
+    
+    def __call__(self, X):
+        """
+        Make the model callable to be compatible with SHAP.
+        """
+        return self.predict_proba(X)
+    
 
 class XGBClassifierWrapper(xgb.XGBClassifier):
     def __init__(self, verbose=False, **kwargs):
@@ -65,14 +131,16 @@ class XGBClassifierWrapper(xgb.XGBClassifier):
             print(classification_report(y_test, y_pred))
             print("Model Final Generalization Accuracy: %.6f" % accuracy_score(y_test, y_pred))
         
-        # Assuming get_roc is defined to calculate and display the ROC curve
+
         y_pred_proba = self.predict_proba(X_test)[:, 1]
-        self.get_roc(y_test, y_pred_proba)  # This function needs to be defined elsewhere
+        self.get_roc(y_test, y_pred_proba)  
 
     def get_roc (self, y_test, y_pred_proba):
         # Compute ROC curve and ROC area for each class
         fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
-        roc_auc = auc(fpr, tpr)
+        # roc_auc = auc(fpr, tpr)
+
+        roc_auc = roc_auc_score(y_test, y_pred_proba)
         # Plot of a ROC curve
         plt.figure()
         lw = 2
