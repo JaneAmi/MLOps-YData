@@ -100,13 +100,13 @@ class CreditDataPreprocessor:
 
         if self.save:
             df = pd.concat([self.X_clean, self.y_clean], axis=1)
-            df.to_csv("../data/processed/german_credit_score.csv", index=False)
+            df.to_csv("data/processed/german_credit_score.csv", index=False)
 
         return self.X_clean, self.y_clean
 
 def german_credit_data(save=True):
     try:
-        df = pd.read_csv("../data/processed/german_credit_score.csv")
+        df = pd.read_csv("data/processed/german_credit_score.csv")
         return df.iloc[:, :-1], df.iloc[:, -1:]
     except:
         preprocessor = CreditDataPreprocessor(save=save)
@@ -118,7 +118,7 @@ def german_credit_data(save=True):
 import pandas as pd
 
 class BankDataProcessor:
-    def __init__(self, filepath="../data/raw/bank.csv", save=True):
+    def __init__(self, filepath="data/raw/bank.csv", save=True):
         """
         Initialize the BankDataProcessor with the path to the CSV file.
         """
@@ -146,7 +146,7 @@ class BankDataProcessor:
         self.data['y'].replace(('yes', 'no'), (1, 0), inplace=True)
 
         if self.save:
-            self.data.to_csv("../data/processed/bank_marketing.csv", index=False)
+            self.data.to_csv("data/processed/bank_marketing.csv", index=False)
 
 
     def get_features_and_target(self):
@@ -164,7 +164,7 @@ class BankDataProcessor:
 
 def bank_marketing(save=True):
     try:
-        df = pd.read_csv("../data/processed/bank_marketing.csv.csv")
+        df = pd.read_csv("data/processed/bank_marketing.csv.csv")
         return df.iloc[:, :-1], df.iloc[:, -1:]
     except:
         processor = BankDataProcessor(save=save)
