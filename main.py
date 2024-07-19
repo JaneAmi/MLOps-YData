@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Add the directory containing the xai_compare module to the Python path
+module_path = '/Users/evgenia_k/Desktop/Y_Data/CitrusX_prj_New/xai-compare'
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
 import logging
 import warnings
 from sklearn.model_selection import train_test_split
@@ -43,7 +51,12 @@ def process_dataset(dataset_func, model_class, params, test_size=0.3, random_sta
     # Create and fit the model
     logger.info("Training model...")
     model = model_class()
-    model.fit(X_train_clean, y_train_clean)
+
+    if isinstance(model, XGBClassifierWrapper):
+        model.fit(X_train_clean, y_train_clean, X_test_clean, y_test_clean)
+    else:
+        model.fit(X_train_clean, y_train_clean)
+    # model.fit(X_train_clean, y_train_clean)
 
     # Evaluate the model
     logger.info("Evaluating model...")
@@ -55,7 +68,8 @@ def process_dataset(dataset_func, model_class, params, test_size=0.3, random_sta
     # Perform feature elimination
     logger.info("Performing feature elimination...")
     feature_elim = FeatureElimination(**params)
-    feature_elim.best_result()
+    print(feature_elim.best_result())
+    feature_elim.display()
 
 def main():
     """
@@ -67,7 +81,7 @@ def main():
     bank_params = {
         'custom_explainer': None,
         'mode': 'classification',
-        'metric': 'Accuracy',
+        'metric': 'AUC',
         'default_explainers': ['shap', 'permutations'],
         'verbose': True,
         'random_state': 2,
